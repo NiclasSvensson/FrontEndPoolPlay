@@ -8,8 +8,15 @@
     <body>
         <div class="page">
             <div class="container">
-                <h1>Select Game</h1>
+                <h1>Configure</h1>
                 <select id="gameSelect"></select>
+                <div id="strategyWrapper">
+                    <select id="strategySelect"></select>
+                    <div id="dynamicFields"></div>
+                </div>
+                <input type="number" id="budget" placeholder="Budget" value="100">
+                <input type="number" id="floor" placeholder="Minimal" value="0">
+                <input type="number" id="ceil" placeholder="Maximum" value="1000000">
             </div>
             <div class="container">
                 <h1>Cupon</h1>
@@ -23,6 +30,7 @@
                 <canvas id="histogram"></canvas>
                 <h1>Sign Distribution</h1>
                 <div id="distributionTable"></div>
+                <button id="save">Save</button>
             </div>
         </div>
         <script src="script.js"></script>

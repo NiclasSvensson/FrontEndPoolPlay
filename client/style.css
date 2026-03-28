@@ -17,6 +17,10 @@ body {
     width: 600px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* GRID */
@@ -88,8 +92,9 @@ button {
     gap: 10px;
 }
 
-/* optional fixed width */
-#gameSelect {
+#gameSelect,
+#strategySelect,
+input {
     height: 40px;
     width: 250px;
     font-size: 16px;
@@ -130,4 +135,14 @@ button {
     z-index: 2;
     font-size: 14px;
     color: rgb(83, 83, 83);
+}
+
+#strategyWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between select and input */
+}
+
+#dynamicFields input {
+    width: 100px; /* optional */
 }

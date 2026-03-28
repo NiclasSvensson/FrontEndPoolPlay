@@ -4,7 +4,17 @@ const colValues = ['1', 'X', '2'];
 
 const gridContainer = document.getElementById('button-grid');
 const selectGame = document.getElementById("gameSelect");
+const selectStrategy = document.getElementById("strategySelect");
+const dynamicFields = document.getElementById("dynamicFields");
 const table = document.getElementById("distributionTable");
+
+const selectBudget = document.getElementById("budget");
+const selectFloor = document.getElementById("floor");
+const selectCeil = document.getElementById("ceil");
+
+let selectedBudget = 100;
+let selectedFloor = 0;
+let selectedCeil = 10000000;
 
 // Track active buttons
 let buttonState = Array.from({ length: rows }, () => Array(cols).fill(false));
@@ -19,7 +29,10 @@ let odds = Array(rows).fill(null).map(() => Array(cols).fill('-'));
 let percentages = Array(rows).fill(null).map(() => Array(cols).fill('-'));
 
 let gamesMatrix = [];
+let strategies = ["Lowest Probability", "Highest Probability", "Leinad Strategy", "Highest EV"];
 let gameSelected = 0;
+let strategySelected = 0;
+let risk = 0;
 
 let result = [];
 let signDistribution = Array.from({ length: rows }, () => Array(cols).fill(0));
@@ -170,8 +183,7 @@ function updateGrid(newGames, newOdds, newPercentages) {
     }
 }
 
-//document.getElementById("btn2")?.addEventListener("click", async () => {
-selectGame.addEventListener("change", async () => {
+async function getStats() {
     gameSelected = selectGame.selectedIndex;
 
     const flags = ["-w",
@@ -220,16 +232,104 @@ selectGame.addEventListener("change", async () => {
 
     renderGrid();
     updateGrid(games, odds, percentages);
+}
+
+selectGame.addEventListener("change", async () => {
+    getStats();
+});
+
+selectStrategy.addEventListener("change", async () => {
+    strategySelected = selectStrategy.selectedIndex;
+});
+
+
+selectStrategy.addEventListener("change", () => {
+    const index = selectStrategy.selectedIndex;
+
+    // always clear first
+    dynamicFields.innerHTML = "";
+
+    if (index === 2) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.id = "risk";
+        input.placeholder = "Budget";
+        input.value = 0;
+
+        input.min = -1;
+        input.max = 1;
+        input.step = 0.01;
+
+        risk = parseFloat(input.value);
+        input.addEventListener("input", () => {
+            risk = parseFloat(input.value);
+        });
+
+        dynamicFields.appendChild(input);
+    } else {
+        risk = 0;
+    }
+});
+
+selectBudget.addEventListener("change", async () => {
+    selectedBudget = selectBudget.value;
+});
+
+selectFloor.addEventListener("change", async () => {
+    selectedFloor = selectFloor.value;
+});
+
+selectCeil.addEventListener("change", async () => {
+    selectedCeil = selectCeil.value;
+});
+
+document.getElementById('save').addEventListener('click', async () => {
+    console.log(gamesMatrix[gameSelected]);
+    let header = gamesMatrix[gameSelected][0];
+    if (gamesMatrix[gameSelected][1] == 2) {
+        if (gamesMatrix[gameSelected][2] < 2000) {
+            header = header + ",Europa" ;
+        }
+        header = header + ",Omg=" + gamesMatrix[gameSelected][2] + ",Insats=1";
+    }
+    //console.log(result);
+    // Extract first column values
+    const firstColumn = result.map(row => row[0]);
+
+    // Join values into text (one per line)
+    const textContent = [header, ...firstColumn].join('\n');
+
+    // Create a Blob
+    const blob = new Blob([textContent], { type: 'text/plain' });
+
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tips.txt';
+
+    // Trigger download
+    document.body.appendChild(a);
+    a.click();
+
+    // Cleanup
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 });
 
 document.getElementById('btn').addEventListener('click', async () => {
     //const flags = ["-w", "-M", "-b", "100"];
     const flags = ["-w",
                    "-M",
-                   "-b", 67,
+                   "-b", selectedBudget,
                    "-g", gamesMatrix[gameSelected][1],
                    gamesMatrix[gameSelected][2] == 0 ? "" : "-o",
-                   gamesMatrix[gameSelected][2] == 0 ? "" : gamesMatrix[gameSelected][2]
+                   gamesMatrix[gameSelected][2] == 0 ? "" : gamesMatrix[gameSelected][2],
+                   "-m", strategySelected,
+                   strategySelected == 2 ? "-r" : "",
+                   strategySelected == 2 ? risk : "",
+                   "-f", selectedFloor,
+                   "-c", selectedCeil
                   ];
     //const flags = ["-w", "-M", "-b", "100", "-g", gamesMatrix[gameSelected][1]]
 
@@ -314,6 +414,16 @@ async function getAvailableGames() {
 
         selectGame.appendChild(option);
     });
+    getStats();
+}
+
+function addStrategies() {
+    strategies.forEach(strategy => {
+        const option = document.createElement("option");
+        option.value = strategy;
+        option.textContent = strategy;
+        selectStrategy.appendChild(option);
+    });
 }
 
 function drawDistributions() {
@@ -341,5 +451,6 @@ function drawDistributions() {
     });
 }
 
+addStrategies()
 getAvailableGames();
 renderGrid()
